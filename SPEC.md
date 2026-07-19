@@ -13,7 +13,7 @@ Reference implementations:
 
 The standard takes the best of both: website repo's quality gates + skill ergonomics, support-agent repo's Ferry wiring.
 
-## 2. The Standard — six modules
+## 2. The Standard — seven modules
 
 Modules are independently adoptable. The skill runs a gap analysis and installs only what's missing.
 
@@ -87,6 +87,16 @@ Install procedure (from `big-emotion/ferry` docs, v1.1.x):
 
 `develop` = integration (Ferry PRs target it, `FERRY_INTEGRATION_BRANCH=develop`); `main` = protected, release by annotated tag `v*`; tag push triggers `deploy-production.yml` (deploy target per project) + GitHub Release. Working branches `feat/`/`fix/`; `ferry/` reserved for Ferry.
 
+### M7 — Infrastructure & secrets (added 2026-07-19)
+
+The standard's deploy targets and the doctrine for handling credentials:
+
+- **OVH VPS (templated default)**: one Docker container per app behind the shared host-level Traefik (routes by `Host(...)`, ACME resolver, external `proxy` network). Deploy via the per-repo GitHub `production` environment — `DEPLOY_HOST/USER/PORT/KNOWN_HOSTS` as variables (readable, copyable between repos), `DEPLOY_SSH_KEY` as a secret (write-only, human-entered). Fires on `v*` tag from `deploy-production.yml`. Templates: compose file with Traefik labels, `env.template`, Next-standalone Dockerfile variant.
+- **Azure App Service (documented variant, no templates)**: the website model — staging + production apps, slots, OIDC federated credentials (no publish-profile secrets), standalone bundle assembly. Reference points to the website repo's runbooks.
+- **Transactional mail**: Microsoft 365 tenant SMTP (`smtp.office365.com:587` STARTTLS; Authenticated SMTP + app password prereq; Graph `sendMail` fallback) — no third-party ESP. OVH manages DNS zones/domains; MX/SPF stay pointed at M365.
+- **Secrets doctrine**: three storage tiers (GitHub secrets/environments · VPS `.env` filled in place by a human · provider portals). Docs and templates carry secret **names, locations, and acquisition steps — never values**. Credentials are personal per operator; nothing is shared through a repo. gitleaks (M1) is the enforcement layer, including on this plugin repo itself.
+- **Hybrid coordinates model**: every M7 template/reference is fully parameterized; the real Big Emotion coordinates (VPS, DNS, Azure app names — zero secret values) live in exactly one clearly-marked internal file, `references/m7-bigemotion-internal.md`, deletable in one gesture if the repo ever goes public.
+
 ## 3. The setup skill
 
 - **Name**: `big-emotion-setup` (working title).
@@ -104,8 +114,10 @@ Taken (flag if you disagree):
 - **D4** Skill templates base on support-agent skill variants (website-agnostic), not the website ones.
 
 For the user:
-- **D5** Repo name: proposal `big-emotion/project-standard`.
-- **D6** Distribution: Claude Code **plugin marketplace** repo (team installs via `/plugin marketplace add big-emotion/project-standard`) vs plain repo the skill is copied from. Proposal: plugin.
+- **D5** Repo name: proposal `big-emotion/project-standard`. → Decided: `big-emotion/project-standard`.
+- **D6** Distribution: Claude Code **plugin marketplace** repo (team installs via `/plugin marketplace add big-emotion/project-standard`) vs plain repo the skill is copied from. Proposal: plugin. → Decided: plugin.
+- **D7** (2026-07-19) M7 coordinates model: **hybrid** — parameterized module + one internal coordinates file, zero secret values anywhere in the repo.
+- **D8** (2026-07-19) Azure is a **documented variant**, not a templated target; the OVH VPS pattern is the templated default. Mail scope: M365 SMTP + OVH DNS/domains.
 
 ## 5. Out of scope
 

@@ -1,0 +1,43 @@
+# Production image — Next.js standalone VARIANT, installed as <app>/Dockerfile.
+# The standalone output is served by Next's built-in Node server behind the
+# VPS-level shared Traefik. Other frameworks adapt the two stages but keep the
+# shape: multi-stage build, non-root runtime user, all configuration injected
+# at run time via the compose env_file (nothing baked into the image).
+# Requires `output: "standalone"` in next.config.
+
+# Stage 1: install dependencies and build
+FROM node:{{node_version}}-alpine AS builder
+WORKDIR /app
+# pnpm via corepack (the standard toolchain — M2). npm repos: drop corepack
+# and switch to `npm ci` / `npm run build`.
+RUN corepack enable
+
+# Install deps first so this layer caches when only source changes.
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
+
+COPY . .
+RUN pnpm build
+
+# Stage 2: minimal production runtime
+FROM node:{{node_version}}-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+
+# Drop root — the standalone server doesn't need it.
+RUN addgroup --system --gid 1001 nodejs \
+ && adduser  --system --uid 1001 nextjs
+
+# Next.js standalone output: server.js + traced node_modules. public/ and
+# .next/static must be copied alongside it for the built-in server to serve
+# them — they are not part of the standalone tree.
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static   ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public         ./public
+
+USER nextjs
+EXPOSE 3000
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+
+CMD ["node", "server.js"]

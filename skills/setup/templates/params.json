@@ -26,6 +26,12 @@
   "confluence_architecture_page_id": "Confluence page id for Architecture (set by bootstrap)",
   "confluence_obsolete_page_id": "Confluence page id for Obsolete (set by bootstrap)",
   "deploy_workflow": "Filename of the production deploy workflow (e.g. deploy-production.yml)",
+  "vps_host": "Deploy VPS hostname or IP the SSH deploy targets",
+  "vps_ssh_port": "SSH port of the deploy VPS",
+  "vps_ssh_user": "SSH user on the deploy VPS",
+  "app_hostname": "Public hostname the app is served on (Traefik Host rule / DNS record)",
+  "deploy_path": "Absolute path of the app's deploy directory on the VPS",
+  "mail_from": "From address for transactional email (e.g. no-reply@big-emotion.com)",
   "ferry_jira_account": "Email or account id of the dedicated ferry Jira user",
   "ferry_version": "Pinned @big-emotion/ferry version (e.g. v1.1.2)",
   "working_branch_prefix": "Prefix for human working branches (e.g. feat/)"

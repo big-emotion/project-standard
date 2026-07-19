@@ -1,0 +1,53 @@
+# Deploy compose for the {{project_slug}} container behind the VPS-level shared
+# Traefik. Installed as <app>/deploy/docker-compose.yml. CI ships the image as a
+# tarball and ships THIS file from the same checkout — reading the compose from
+# the VPS git clone once deployed a stale file silently (website SWBE-26
+# lesson), so the container always restarts with the compose matching the image.
+#
+# The `.env` next to this file (rendered from env.template) holds the
+# server-only secrets. It lives on the VPS, is filled in place by a human, is
+# never committed, and never enters the image (env_file only).
+services:
+  {{project_slug}}:
+    build:
+      # The compose file sits in <app>/deploy/, so `..` is the app directory
+      # containing the Dockerfile — valid whether the app is the repo root or a
+      # subdirectory.
+      context: ..
+      dockerfile: Dockerfile
+    # The deploy workflow loads the shipped tarball and tags it
+    # {{project_slug}}:live before `docker compose up`; `build:` is only the
+    # local fallback (there is no image registry in this pattern).
+    image: {{project_slug}}:live
+    container_name: {{project_slug}}
+    restart: unless-stopped
+    env_file: .env
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      # HTTPS router — the host-level Traefik terminates TLS.
+      - "traefik.http.routers.{{project_slug}}.rule=Host(`{{app_hostname}}`)"
+      - "traefik.http.routers.{{project_slug}}.entrypoints=websecure"
+      # `myresolver` is a Big Emotion constant, not a per-app choice: it names
+      # the ACME resolver configured once in the host-level Traefik
+      # (http-challenge). Apps only reference it — renaming it here would
+      # break certificate issuance.
+      - "traefik.http.routers.{{project_slug}}.tls.certresolver=myresolver"
+      # HTTP router — redirect to HTTPS (Traefik owns :80, so no redirect loop).
+      - "traefik.http.routers.{{project_slug}}-http.rule=Host(`{{app_hostname}}`)"
+      - "traefik.http.routers.{{project_slug}}-http.entrypoints=web"
+      - "traefik.http.routers.{{project_slug}}-http.middlewares={{project_slug}}-https"
+      - "traefik.http.middlewares.{{project_slug}}-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.{{project_slug}}-https.redirectscheme.permanent=true"
+      # Port the app listens on inside the container. 3000 is the Next.js
+      # standalone default (dockerfile.next) — adjust for other frameworks.
+      - "traefik.http.services.{{project_slug}}.loadbalancer.server.port=3000"
+
+networks:
+  # `proxy` is a Big Emotion constant, not a per-app choice: the external
+  # Docker network the host-level Traefik watches, created once per VPS and
+  # shared by every app container. A compose-managed per-app network would be
+  # invisible to Traefik.
+  proxy:
+    external: true

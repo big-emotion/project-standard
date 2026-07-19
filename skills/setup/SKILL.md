@@ -1,6 +1,6 @@
 ---
 name: setup
-description: Install and configure the Big Emotion project standard on a new or existing repo — CI quality gates, Husky hooks, the four project skills, Atlassian wiring (Jira board + Confluence spec tree), and Ferry. Use when starting a new Big Emotion project, bringing an existing repo up to standard, or checking a repo's compliance ("setup this project", "install the standard", "gap analysis", "is this repo up to standard").
+description: Install and configure the Big Emotion project standard on a new or existing repo — CI quality gates, Husky hooks, the four project skills, Atlassian wiring (Jira board + Confluence spec tree), Ferry, and the infrastructure module (OVH VPS deploy, Azure variant, M365 mail, secrets doctrine). Use when starting a new Big Emotion project, bringing an existing repo up to standard, checking a repo's compliance, or setting up deploy/mail/secrets ("setup this project", "install the standard", "gap analysis", "is this repo up to standard", "deploy this on the VPS").
 metadata:
   author: Big Emotion
   version: 0.1.0
@@ -18,6 +18,7 @@ Every Big Emotion project ships the same toolset. This skill installs it, module
 | M4 | Atlassian wiring (Jira board, Confluence spec tree, config) | `references/m4-atlassian.md` |
 | M5 | Ferry (router model, claude-code path) | `references/m5-ferry.md` |
 | M6 | Branch & release model (develop/main, tag `v*` → deploy) | `references/m6-branch-release.md` |
+| M7 | Infrastructure & secrets (OVH VPS + Traefik, Azure variant, M365 mail, secrets doctrine) | `references/m7-infra.md` |
 
 Reference paths above are relative to `${CLAUDE_PLUGIN_ROOT}/skills/setup/`. Templates live in `${CLAUDE_PLUGIN_ROOT}/skills/setup/templates/`; the placeholder registry is `templates/params.json`.
 
@@ -28,12 +29,13 @@ Reference paths above are relative to `${CLAUDE_PLUGIN_ROOT}/skills/setup/`. Tem
 - **Modules are independent.** Install only what the user selected; missing prerequisites between modules (M5 needs M4's board; M3's spec skill needs M4's config) are declared in the plan, not silently added.
 - **Everything written is in English** (code, comments, docs). User-facing trigger phrases inside skills may stay French.
 - **Adapt, don't force.** Templates ship in pnpm/TypeScript form; adapt commands to the interview answers (package manager, toolchain layout, no-TS repos) per each module's reference doc.
+- **Secret names, never values.** The skill documents where every secret lives, what it is called, and how to obtain it — it never writes, echoes, or stores a secret value (not in rendered files, not in conversation output, not in this plugin). Values are entered by a human directly at their destination (GitHub secret, VPS `.env`, provider portal). Big Emotion's real infra coordinates live only in `references/m7-bigemotion-internal.md`; consult it for interview defaults when working on Big Emotion infrastructure.
 
 ## Step 1 — Interview
 
 Read `templates/params.json` — it is the authoritative parameter list. Collect only what the selected modules need; propose defaults detected from the repo (package.json name → `project_slug`, `git remote` → org/repo, existing branches → branch model). For Atlassian ids, prefer discovery via Atlassian MCP over asking (see `references/m4-atlassian.md`).
 
-Ask which modules to install when the user hasn't said; default to all six for a new project.
+Ask which modules to install when the user hasn't said; default to all seven for a new project. For M7 on Big Emotion infrastructure, pre-fill defaults from `references/m7-bigemotion-internal.md` instead of asking.
 
 ## Step 2 — Gap analysis (read-only)
 
@@ -45,6 +47,7 @@ For each selected module, classify **missing / present / drifted** with evidence
 - **M4**: `docs/confluence-spec/config.json` complete? `docs/.confluence-bootstrap-complete` sentinel? `docs/templates/jira-ticket-template.md`? Jira board reachable via MCP with the five pipeline columns?
 - **M5**: `ferry.config.json|yaml` + `.github/workflows/ferry-router.yml` (router model — five per-role `ferry-*.yml` workflows = drifted: legacy model, flag for migration but do not auto-migrate) + `ferry-reconcile.yml` + `ferry-cost-daily.yml`? Secrets/vars present (`gh secret list`, `gh variable list`)?
 - **M6**: integration branch exists, default branch protected, `deploy-production.yml` triggered on tag `v*`?
+- **M7**: deploy artifacts present (`Dockerfile`, `deploy/docker-compose.yml`, `deploy/env.template` — or Azure deploy workflows)? GitHub `production` environment with the `DEPLOY_*` variables + `DEPLOY_SSH_KEY` secret (`gh api repos/{owner}/{repo}/environments`)? Transactional mail wired per the M365 pattern where the app sends email?
 
 Output one table: module · status · evidence · what install would do.
 
@@ -54,7 +57,7 @@ Per-module install plan (files to write, wizards to run, manual steps the user m
 
 ## Step 4 — Install
 
-Work module by module in order M6 → M1 → M2 → M4 → M3 → M5 (branch model first — CI triggers reference branches; Ferry last — it needs board, branches, and CI). For each module follow its reference doc; render templates by replacing `{{param}}` tokens with interview values; `# PROJECT-SPECIFIC:` / `<!-- PROJECT-SPECIFIC: -->` markers in templates show where the project adds its own content — surface them to the user, never delete silently.
+Work module by module in order M6 → M1 → M2 → M4 → M3 → M5 → M7 (branch model first — CI triggers reference branches; Ferry needs board, branches, and CI; infra last — its deploy workflow slots into M6's release flow). For each module follow its reference doc; render templates by replacing `{{param}}` tokens with interview values; `# PROJECT-SPECIFIC:` / `<!-- PROJECT-SPECIFIC: -->` markers in templates show where the project adds its own content — surface them to the user, never delete silently.
 
 Manual Atlassian/GitHub-settings steps: guide the user through them interactively and verify each via MCP or `gh` before moving on.
 
