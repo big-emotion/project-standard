@@ -1,0 +1,13 @@
+{
+  "name": "project-standard",
+  "displayName": "Big Emotion Project Standard",
+  "version": "0.1.0",
+  "description": "Installs and configures the Big Emotion project standard on any repo: CI quality gates, Husky hooks, the four project skills, Atlassian wiring, and Ferry.",
+  "author": {
+    "name": "Big Emotion"
+  },
+  "homepage": "https://github.com/big-emotion/project-standard",
+  "repository": "https://github.com/big-emotion/project-standard",
+  "license": "MIT",
+  "keywords": ["standards", "scaffolding", "ci", "husky", "ferry", "atlassian"]
+}

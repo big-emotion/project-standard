@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  # Pre-merge gate. Every change reaches {{integration_branch}}/{{default_branch}}
+  # via a PR, so pull_request is the only event needed: it covers
+  # feature → {{integration_branch}} and {{integration_branch}} → {{default_branch}}
+  # alike, runs exactly once per commit SHA, and avoids the (push)/(pull_request)
+  # duplication that doubles every check on a PR. Post-merge validation belongs
+  # to the deploy workflows, not this gate.
+  pull_request:
+    branches: [{{integration_branch}}, {{default_branch}}]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gitleaks:
+    # Secret scan as its own job: no toolchain install needed, so it reports in
+    # seconds and a leaked secret fails the PR even when the build is broken.
+    # Separate from the Ferry automation, which runs its own gitleaks internally.
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v6
+
+      # Scan contract: this is a per-PR gate, so it scans the working tree at
+      # the PR's HEAD (--no-git), not the full commit history. Secrets in
+      # historical (already-removed) commits are a one-time audit + rotation
+      # concern, not a recurring per-PR signal; --no-git keeps the gate
+      # deterministic and fast. Image pinned by digest for supply-chain
+      # integrity (zricethezav/gitleaks:v8.21.2).
+      - name: Run gitleaks
+        run: >
+          docker run --rm -v "${{ github.workspace }}:/repo" -w /repo
+          zricethezav/gitleaks@sha256:0e99e8821643ea5b235718642b93bb32486af9c8162c8b8731f7cbdc951a7f46
+          detect --source . --no-git --config .gitleaks.toml --redact --no-banner
+
+  build:
+    # The universal required gate: lint, typecheck, format, test, build on
+    # every PR. Heavy gates (e2e, Lighthouse, Storybook) are optional
+    # extensions — see references/m1-ci.md — not part of this job.
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v6
+
+      # corepack resolves the pnpm version pinned in package.json's
+      # packageManager field, so CI and local installs always agree.
+      - name: Set up pnpm
+        run: corepack enable
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "{{node_version}}.x"
+          cache: "pnpm"
+
+      - run: pnpm install --frozen-lockfile
+
+      # Restore the ESLint + Prettier caches so `pnpm lint` and
+      # `pnpm format:check` only re-check files whose *content* changed since a
+      # prior run. Both scripts must use `--cache-strategy content` (not the
+      # default `metadata`): CI does fresh checkouts, so every file gets a new
+      # mtime and `metadata` would never hit. Keyed on the lockfile + both
+      # linter configs because ESLint's / Prettier's own caches invalidate on
+      # file-content changes but NOT on a plugin/version or rule-config bump;
+      # the `github.sha` suffix makes every run save a fresh (non-stale) entry
+      # and the restore-keys prefix falls back to the most recent cache for the
+      # same config.
+      - name: Restore linter caches
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules/.cache/eslint
+            node_modules/.cache/prettier
+          key: linters-${{ hashFiles('pnpm-lock.yaml', 'eslint.config.mjs', '.prettierrc.json', '.prettierignore') }}-${{ github.sha }}
+          restore-keys: |
+            linters-${{ hashFiles('pnpm-lock.yaml', 'eslint.config.mjs', '.prettierrc.json', '.prettierignore') }}-
+
+      - run: pnpm lint
+
+      - run: pnpm typecheck
+
+      - run: pnpm format:check
+
+      - run: pnpm test
+
+      - run: pnpm build

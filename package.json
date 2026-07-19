@@ -1,0 +1,14 @@
+{
+  "name": "@big-emotion/project-standard",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The Big Emotion project standard: quality gates, hooks, project skills, Atlassian wiring, Ferry — packaged as a Claude Code plugin that installs and configures it all.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test scripts/*.test.mjs",
+    "check:templates": "node scripts/check-templates.mjs"
+  }
+}

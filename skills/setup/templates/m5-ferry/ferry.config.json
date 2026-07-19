@@ -1,0 +1,32 @@
+{
+  "execution_path": "claude-code",
+  "git": {
+    "base_branch": "{{integration_branch}}",
+    "target_branch": "{{integration_branch}}",
+    "working_branch_prefix": "ferry/"
+  },
+  "workflow": {
+    "agents": {
+      "refiner": {
+        "trigger_column": "Refinement",
+        "auto_transition": null
+      },
+      "developer": {
+        "trigger_column": "In Development",
+        "auto_transition": "In Review"
+      },
+      "reviewer": {
+        "trigger_column": "In Review",
+        "auto_transition_approve": "To Merge",
+        "auto_transition_changes": "Changes Requested"
+      },
+      "iterator": {
+        "trigger_column": "Changes Requested",
+        "auto_transition": "In Review"
+      },
+      "merger": {
+        "trigger_column": "To Merge"
+      }
+    }
+  }
+}

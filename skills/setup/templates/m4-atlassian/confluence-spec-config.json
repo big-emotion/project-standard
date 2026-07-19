@@ -1,0 +1,21 @@
+{
+  "cloudId": "{{atlassian_cloud_id}}",
+  "siteUrl": "{{jira_site_url}}",
+  "spaceKey": "{{confluence_space_key}}",
+  "spaceId": "{{confluence_space_id}}",
+  "engineeringRootPageId": "{{confluence_root_page_id}}",
+  "engineeringTreePageId": "{{confluence_root_page_id}}",
+  "requirementsPageId": "{{confluence_requirements_page_id}}",
+  "decisionsPageId": "{{confluence_decisions_page_id}}",
+  "architecturePageId": "{{confluence_architecture_page_id}}",
+  "obsoletePageId": "{{confluence_obsolete_page_id}}",
+  "jiraProjectKey": "{{jira_project_key}}",
+  "jiraProjectId": "{{jira_project_id}}",
+  "jiraIssueTypeIds": {
+    "Epic": "{{jira_issue_type_id_epic}}",
+    "Story": "{{jira_issue_type_id_story}}",
+    "Task": "{{jira_issue_type_id_task}}",
+    "Bug": "{{jira_issue_type_id_bug}}",
+    "Sub-task": "{{jira_issue_type_id_subtask}}"
+  }
+}
