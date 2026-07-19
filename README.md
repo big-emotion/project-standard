@@ -12,8 +12,11 @@ The toolset and configuration every Big Emotion project ships with — codified 
 | M4 | **Atlassian wiring** — Jira board (pipeline columns + `ferry` user), Confluence spec tree (REQ/DEC/ARCH) |
 | M5 | **Ferry** — Jira → AI-agent automation ([@big-emotion/ferry](https://github.com/big-emotion/ferry)), router model, claude-code path |
 | M6 | **Branch & release model** — `develop` integration, protected `main`, release by tag `v*` → deploy |
+| M7 | **Infrastructure & secrets** — OVH VPS (Docker + shared Traefik) as templated deploy target, Azure App Service as documented variant, M365 transactional SMTP + OVH DNS, secrets doctrine (names and locations, never values) |
 
-Full rationale and decisions: [SPEC.md](SPEC.md). Reference implementations: `the website repo` (M1–M3), `the support-agent repo` (M5).
+Full rationale and decisions: [SPEC.md](SPEC.md). Reference implementations: `the website repo` (M1–M3), `the support-agent repo` (M5, M7).
+
+**No secret values, ever.** This repo documents where secrets live and what they are called; values stay in GitHub secrets, VPS `.env` files, and provider portals, tied to each operator's own accounts. Real Big Emotion infra coordinates (no secrets) are isolated in `skills/setup/references/m7-bigemotion-internal.md` — delete that one file if this repo ever becomes public.
 
 ## Install
 
