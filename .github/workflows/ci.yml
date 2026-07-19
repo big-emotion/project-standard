@@ -10,6 +10,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  gitleaks:
+    # Dogfoods M1 and guards the no-secret-values rule: this repo documents
+    # secret names and real infra coordinates, so an accidental value paste
+    # must fail CI.
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Run gitleaks
+        run: >
+          docker run --rm -v "${{ github.workspace }}:/repo" -w /repo
+          zricethezav/gitleaks@sha256:0e99e8821643ea5b235718642b93bb32486af9c8162c8b8731f7cbdc951a7f46
+          detect --source . --no-git --config .gitleaks.toml --redact --no-banner
+
   checks:
     runs-on: ubuntu-latest
     steps:
