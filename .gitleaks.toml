@@ -1,0 +1,10 @@
+# Guards the repo's own no-secret-values rule (see SPEC.md M7). Templates and
+# references may name secrets and show placeholder syntax — never values.
+[extend]
+useDefault = true
+
+[allowlist]
+paths = [
+  # Documented placeholder examples inside the gitleaks template itself.
+  '''skills/setup/templates/m1-ci/gitleaks\.toml''',
+]
