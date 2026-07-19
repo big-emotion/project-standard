@@ -23,6 +23,12 @@ useDefault = true
 #   # High-entropy binary assets (self-hosted fonts) — known false positives
 #   # for generic-api-key rules, never secrets.
 #   '''^public/fonts/.*\.(woff2?|ttf|eot|otf)$''',
+#   # Tests that assert on deliberately fake keys (a secret-scan test suite's
+#   # own fixtures WILL trip the ruleset — proof it works; allowlist the file).
+#   '''(^|/)secret-scan\.test\.ts$''',
+#   # Framework build caches (e.g. Next.js .next/): absent from CI checkouts,
+#   # but --no-git ignores .gitignore, so local runs flag them without this.
+#   '''(^|/)\.next/''',
 # ]
 # regexes = [
 #   # A literal documentation placeholder (e.g. `curl -u 'admin:<pwd>'` in a
