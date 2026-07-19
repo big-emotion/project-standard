@@ -1,0 +1,92 @@
+name: Deploy production
+
+# Ships a release tag created by the {{project_slug}}-release skill (M3):
+# build → deploy → GitHub Release, all driven by the single v* tag push.
+#
+# The deploy job refuses tags pointing at commits not on {{default_branch}}:
+# tag rulesets are unavailable on some GitHub plans, and Ferry agents push
+# with a PAT (which does trigger tag workflows), so this in-workflow guard is
+# what keeps a stray `git push origin vX.Y.Z` on an unreviewed commit from
+# reaching production.
+
+on:
+  push:
+    tags: ["v*"]
+
+# One production deploy at a time; never cancel an in-progress deploy.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Build and deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # PROJECT-SPECIFIC: declare a `production` GitHub environment when the
+    # deploy target uses environment-scoped secrets/variables:
+    # environment:
+    #   name: production
+    #   url: https://<production-url>
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # The ancestry guard below needs the history connecting the tag to
+          # origin/{{default_branch}}.
+          fetch-depth: 0
+
+      - name: Refuse tags on commits not on {{default_branch}}
+        run: |
+          set -euo pipefail
+          tag_commit=$(git rev-parse "${GITHUB_REF}^{commit}")
+          if ! git merge-base --is-ancestor "$tag_commit" "origin/{{default_branch}}"; then
+            echo "::error::${GITHUB_REF_NAME} points at a commit that is not on origin/{{default_branch}} — refusing to deploy."
+            exit 1
+          fi
+
+      # Toolchain setup ships in pnpm form; when the interview answered npm,
+      # drop the pnpm step and switch to `npm ci` / `cache: npm` — see
+      # references/m6-branch-release.md § Template adaptation.
+      - uses: pnpm/action-setup@v4
+        # Version comes from the packageManager field in package.json (set by
+        # M2). Pass `version:` explicitly only when that field is absent.
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "{{node_version}}"
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Fast validation before producing the deployable artefact — mirror the
+      # repo's CI gates so a bad tag fails here, not in production.
+      - run: pnpm build
+
+      # PROJECT-SPECIFIC: deploy steps
+      # Everything from here to the end of this job is the project's own
+      # deploy mechanism. Reference shapes from the two live implementations:
+      #   - Docker over SSH to a VPS (big-emotion/support-agent-chancellerie):
+      #     docker build → docker save | gzip → scp tarball + compose file →
+      #     ssh docker load + `docker compose up -d --pull never` → curl smoke
+      #     check expecting 200. Pin known_hosts; never StrictHostKeyChecking=no.
+      #   - Azure App Service (ANSUT-DSIS/sitewebgrandechancellerie):
+      #     assemble standalone bundle → azure/login (OIDC) →
+      #     azure/webapps-deploy → commit status with the deploy URL.
+      # Keep a post-deploy smoke check (request the production URL, assert 200).
+
+  # GitHub Release creation, gated on a successful deploy so a failed deploy
+  # never gets a release page pointing at it. Post-deploy smoke checks, if the
+  # project adds any, stay soft — not a dependency of this job.
+  release:
+    name: GitHub Release
+    needs: [deploy]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3
+        with:
+          generate_release_notes: true

@@ -1,0 +1,32 @@
+# Gitleaks configuration for the project CI surface (renamed to .gitleaks.toml
+# on install). Extends the upstream default ruleset; the allowlist exists only
+# for repo-specific noise. An allowlisted path is invisible to the scanner
+# forever, so keep every entry anchored and justified.
+title = "{{project_slug}} gitleaks config"
+
+[extend]
+useDefault = true
+
+# Uncomment and adapt when the default ruleset flags known non-secret files.
+# Examples below come from the reference repo (sitewebgrandechancellerie).
+#
+# [allowlist]
+# description = "Global allowlist for known non-secret paths"
+# paths = [
+#   # Anchored so prefixes/suffixes (e.g. backup/pnpm-lock.yaml) don't match.
+#   '''^pnpm-lock\.yaml$''',
+#   # Matches .env.example at any directory level but NOT .env.example.local.
+#   '''(^|/)\.env\.example$''',
+#   # Generated files whose random ids trip the generic-api-key rule
+#   # (e.g. codegen type declarations, mock fixtures with UUID keys).
+#   '''(^|/)prismicio-types\.d\.ts$''',
+#   # High-entropy binary assets (self-hosted fonts) — known false positives
+#   # for generic-api-key rules, never secrets.
+#   '''^public/fonts/.*\.(woff2?|ttf|eot|otf)$''',
+# ]
+# regexes = [
+#   # A literal documentation placeholder (e.g. `curl -u 'admin:<pwd>'` in a
+#   # runbook). Match the placeholder itself — not the file path — so real
+#   # secrets in the same file still get flagged.
+#   '''admin:<pwd>''',
+# ]

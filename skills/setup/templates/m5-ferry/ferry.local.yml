@@ -1,0 +1,39 @@
+# Durable local overrides for `ferry-update` (@big-emotion/ferry >= 1.0.3).
+# The updater reads this file and re-applies these customisations every time it
+# regenerates the workflow templates — unlike inline edits to
+# .github/workflows/ferry-router.yml, these survive updates without manual
+# re-porting.
+#
+# Full supported schema:
+#   version: 1                      — schema version (only 1 is valid)
+#   review.ciGate: disabled         — omit the reviewer ci-gate job entirely
+#   global.runner: <string|array>   — hard-pin the runner in generated files
+#
+# Anything else you diverge on inside ferry-router.yml (extra MCP wiring, env
+# blocks on the agent step, extra install steps) is NOT covered by this file:
+# mark each such edit with a "LOCAL DIVERGENCE (protected)" comment and
+# re-apply it by hand after every ferry-init / ferry-update run — see
+# references/m5-ferry.md § Gotchas.
+
+version: 1
+
+review:
+  # Big Emotion convention: only the Merger gates on CI. The upstream
+  # ferry-ci-gate treats "no PR found yet" and "CI checks still pending" as
+  # proceed=false and skips the Reviewer silently, and on red CI it bounces the
+  # ticket to Changes Requested un-reviewed — in a Jira-driven flow (where the
+  # review dispatch can fire before the Developer's PR exists or before CI has
+  # reported) this ping-pongs tickets forever without a single review verdict.
+  # With the gate disabled the Reviewer runs unconditionally and judges the PR
+  # on its merits; the Developer/Iterator surface the true CI state via the
+  # ci-green / ci-failing PR labels, and the Merger re-validates green CI
+  # before anything lands.
+  ciGate: disabled
+
+# global:
+#   # Deliberately NOT set: pinning the runner here would replace the
+#   # `${{ fromJSON(vars.FERRY_RUNNER || '"ubuntu-latest"') }}` expression in
+#   # the generated workflows and lose the ability to switch runners at runtime
+#   # via the FERRY_RUNNER repository variable (JSON-encoded — see
+#   # references/m5-ferry.md § Variables).
+#   runner: ubuntu-latest

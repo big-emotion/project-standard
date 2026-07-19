@@ -1,0 +1,79 @@
+name: Approve agent CI
+
+on:
+  # Since GitHub's 2026-06-11 platform change, `pull_request` workflow runs
+  # whose triggering actor is github-actions[bot] are gated behind a manual
+  # "Approve and run" button:
+  # https://github.blog/changelog/2026-06-11-bot-created-pull-requests-can-run-workflows-if-approved/
+  # Ferry agents push PR commits with the workflow GITHUB_TOKEN, so every
+  # agent-synchronized PR stalls until a maintainer clicks the button — which
+  # breaks the column-driven Ferry chain (reviewer/merger read CI status).
+  # `pull_request_target` runs in the trusted base-branch context and is not
+  # subject to the approval gate, so it can approve the gated sibling runs.
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  actions: write
+
+concurrency:
+  group: approve-agent-ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  approve:
+    # Same-repo agent branches only. Fork PRs keep the manual approval gate,
+    # and human-triggered runs are never gated, so they are skipped too.
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      contains(fromJSON('["github-actions[bot]", "claude[bot]"]'), github.actor)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # Deliberately no actions/checkout: pull_request_target carries
+      # base-branch trust and repo secrets, so this job must never execute
+      # code from the PR head.
+      - name: Relaunch workflow runs gated on the PR head SHA
+        env:
+          # The REST approve endpoint is fork-PR-only (403 "This run is not
+          # from a fork pull request" on bot-gated same-repo runs). Rerunning
+          # the gated run instead re-attributes it to this token's identity,
+          # which lifts the gate. CI_APPROVAL_TOKEN must be a fine-grained PAT
+          # (actions: write) from a write-access user: a rerun issued with the
+          # workflow token is attributed to github-actions[bot] and may re-trip
+          # the very gate it lifts. The final still-gated check below makes
+          # that failure mode loud.
+          GH_TOKEN: ${{ secrets.CI_APPROVAL_TOKEN || github.token }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          relaunched=" "
+          # The gated runs spawn from the same push event as this one; poll a
+          # short window so late-registering runs (e.g. a second workflow
+          # alongside CI) are caught in a later sweep. A rerun keeps its run id
+          # and can lag in the API as action_required for a moment — skip ids
+          # already relaunched instead of rerunning them twice.
+          for attempt in 1 2 3 4 5 6; do
+            gated_runs=$(gh api \
+              "repos/${GITHUB_REPOSITORY}/actions/runs?head_sha=${HEAD_SHA}&per_page=50" \
+              --jq '.workflow_runs[] | select(.conclusion == "action_required") | .id')
+            for run_id in $gated_runs; do
+              case "$relaunched" in *" ${run_id} "*) continue ;; esac
+              if gh api -X POST "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/rerun"; then
+                echo "relaunched gated run ${run_id}"
+                relaunched="${relaunched}${run_id} "
+              else
+                echo "::error::could not relaunch run ${run_id} — set the CI_APPROVAL_TOKEN repo secret to a fine-grained PAT (actions: write) from a write-access user"
+                exit 1
+              fi
+            done
+            sleep 10
+          done
+          still_gated=$(gh api \
+            "repos/${GITHUB_REPOSITORY}/actions/runs?head_sha=${HEAD_SHA}&per_page=50" \
+            --jq '.workflow_runs[] | select(.conclusion == "action_required") | .id')
+          if [ -n "${still_gated}" ]; then
+            echo "::error::runs still gated after relaunch (${still_gated}) — the workflow token cannot lift the gate; set the CI_APPROVAL_TOKEN repo secret to a fine-grained PAT (actions: write) from a write-access user"
+            exit 1
+          fi
+          echo "relaunched gated run(s) for ${HEAD_SHA}:${relaunched}"

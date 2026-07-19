@@ -1,0 +1,22 @@
+{
+  "name": "big-emotion",
+  "owner": {
+    "name": "Big Emotion"
+  },
+  "description": "Big Emotion's Claude Code plugins.",
+  "plugins": [
+    {
+      "name": "project-standard",
+      "source": "./",
+      "displayName": "Big Emotion Project Standard",
+      "description": "Installs and configures the Big Emotion project standard on any repo: CI quality gates, Husky hooks, the four project skills, Atlassian wiring, and Ferry.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Big Emotion"
+      },
+      "homepage": "https://github.com/big-emotion/project-standard",
+      "repository": "https://github.com/big-emotion/project-standard",
+      "license": "MIT"
+    }
+  ]
+}
