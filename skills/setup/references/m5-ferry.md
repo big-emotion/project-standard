@@ -10,7 +10,7 @@ interview value (v1.1.2 at the time of writing) everywhere a version appears.
 Upstream docs are authoritative for procedures:
 <https://github.com/big-emotion/ferry> (docs/INSTALL.md, docs/CONFIGURATION.md).
 This reference layers the Big Emotion hardening on top. The live reference
-implementation is `the support-agent repo`.
+implementation is the support-agent repo.
 
 ## Prerequisites
 

@@ -29,13 +29,13 @@ Reference paths above are relative to `${CLAUDE_PLUGIN_ROOT}/skills/setup/`. Tem
 - **Modules are independent.** Install only what the user selected; missing prerequisites between modules (M5 needs M4's board; M3's spec skill needs M4's config) are declared in the plan, not silently added.
 - **Everything written is in English** (code, comments, docs). User-facing trigger phrases inside skills may stay French.
 - **Adapt, don't force.** Templates ship in pnpm/TypeScript form; adapt commands to the interview answers (package manager, toolchain layout, no-TS repos) per each module's reference doc.
-- **Secret names, never values.** The skill documents where every secret lives, what it is called, and how to obtain it — it never writes, echoes, or stores a secret value (not in rendered files, not in conversation output, not in this plugin). Values are entered by a human directly at their destination (GitHub secret, VPS `.env`, provider portal). Big Emotion's real infra coordinates live only in `references/m7-bigemotion-internal.md`; consult it for interview defaults when working on Big Emotion infrastructure.
+- **Secret names, never values.** The skill documents where every secret lives, what it is called, and how to obtain it — it never writes, echoes, or stores a secret value (not in rendered files, not in conversation output, not in this plugin). Values are entered by a human directly at their destination (GitHub secret, VPS `.env`, provider portal). **This plugin is public and ships no infrastructure coordinates** — no hostnames, IPs, SSH ports, account handles or resource names. Collect them from the user at interview time and never write them back into the plugin.
 
 ## Step 1 — Interview
 
 Read `templates/params.json` — it is the authoritative parameter list. Collect only what the selected modules need; propose defaults detected from the repo (package.json name → `project_slug`, `git remote` → org/repo, existing branches → branch model). For Atlassian ids, prefer discovery via Atlassian MCP over asking (see `references/m4-atlassian.md`).
 
-Ask which modules to install when the user hasn't said; default to all seven for a new project. For M7 on Big Emotion infrastructure, pre-fill defaults from `references/m7-bigemotion-internal.md` instead of asking.
+Ask which modules to install when the user hasn't said; default to all seven for a new project. M7's coordinates (VPS host, SSH port and user, app hostname, deploy path, mail sender) ship with no defaults by design — ask for them, or let the user point you at their own private ops notes outside this repo.
 
 ## Step 2 — Gap analysis (read-only)
 

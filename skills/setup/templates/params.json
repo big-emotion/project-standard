@@ -9,7 +9,7 @@
   "package_manager": "npm or pnpm; templates ship in pnpm form, adaptation guidance in references",
   "package_manager_version": "Pinned package-manager version for the packageManager field (e.g. pnpm@10.12.1)",
   "node_version": "Node major version for engines and setup-node (e.g. 24)",
-  "jira_site_url": "Atlassian site URL (e.g. https://big-emotion.atlassian.net)",
+  "jira_site_url": "Atlassian site URL (e.g. https://your-org.atlassian.net)",
   "jira_project_key": "Jira project key (e.g. ACME)",
   "jira_project_id": "Jira numeric project id",
   "jira_issue_type_id_epic": "Jira issue type id for Epic",
@@ -31,7 +31,7 @@
   "vps_ssh_user": "SSH user on the deploy VPS",
   "app_hostname": "Public hostname the app is served on (Traefik Host rule / DNS record)",
   "deploy_path": "Absolute path of the app's deploy directory on the VPS",
-  "mail_from": "From address for transactional email (e.g. no-reply@big-emotion.com)",
+  "mail_from": "From address for transactional email (e.g. no-reply@example.com)",
   "ferry_jira_account": "Email or account id of the dedicated ferry Jira user",
   "ferry_version": "Pinned @big-emotion/ferry version (e.g. v1.1.2)",
   "working_branch_prefix": "Prefix for human working branches (e.g. feat/)"

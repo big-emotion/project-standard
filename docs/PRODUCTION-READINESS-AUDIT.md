@@ -2,15 +2,22 @@
 
 Date: 2026-07-19 · Auditor: `/project-standard-audit` (full mode) · Repo state: `cb1284f` on `main`, clean tree
 
+> **Superseded in part — 2026-07-21.** The repo was made public. Domain 5's finding
+> ("coordinates isolated in one internal reference file") no longer describes the
+> standard: that file was deleted and the doctrine is now *no coordinates anywhere*
+> (SPEC.md **D9**). Consumer-repo, Jira and PR identifiers cited below as evidence
+> have been redacted for the same reason. Treat this document as a dated snapshot,
+> not current posture; re-run `/project-standard-audit` for that.
+
 ## 1. Scope and method
 
 Read-only audit of the plugin repo itself per the `/project-standard-audit` rubric (7 domains, equal weight). Evidence: the repo's own gates (`npm ci`, `npm test`, `npm run check:templates`), local gitleaks scan, structural greps, GitHub CI history. Consumer repos are out of scope (they carry their own `<slug>-audit`).
 
 ## 2. The four canonical questions
 
-1. **Is the plugin ready to install on real repos?** **Conditional yes.** M1+M2 are proven end-to-end on a real consumer (the support-agent repo, ACME-000 / PR #42, all checks green, hooks live); M3 is proven by this repo's own render (five skills, zero unresolved placeholders). M4/M5 guided flows are written but not yet exercised on a fresh repo. No P0 blocker; the P1 is that no versioned release exists yet, so teammates would install an unversioned moving `main`.
+1. **Is the plugin ready to install on real repos?** **Conditional yes.** M1+M2 are proven end-to-end on a real consumer repo (all checks green, hooks live); M3 is proven by this repo's own render (five skills, zero unresolved placeholders). M4/M5 guided flows are written but not yet exercised on a fresh repo. No P0 blocker; the P1 is that no versioned release exists yet, so teammates would install an unversioned moving `main`.
 2. **Is the template surface healthy?** **Yes.** `check:templates` green (29 placeholders, all declared; unused ones are interview-only by design), adaptation markers intact in all 8 template files that carry them, module tree (m1–m7) matches SPEC.md and README exactly, references complete (one per module + the isolated internal file). Four template defects were logged during the self-render (see §6) — none corrupts output.
-3. **What is the security posture?** **Strong.** Zero secret values anywhere (pattern greps + local gitleaks: clean); the secrets doctrine (names/locations/acquisition only) is enforced by a gitleaks CI job on this repo itself plus local hooks; real infra coordinates are isolated in `skills/setup/references/m7-bigemotion-internal.md` (isolation grep: no hit outside it); third-party actions SHA/digest-pinned; `.gitignore` now covers `.env` variants.
+3. **What is the security posture?** **Strong.** Zero secret values anywhere (pattern greps + local gitleaks: clean); the secrets doctrine (names/locations/acquisition only) is enforced by a gitleaks CI job on this repo itself plus local hooks; real infra coordinates were at the time isolated in a single internal reference file (isolation grep: no hit outside it — see the supersession note above); third-party actions SHA/digest-pinned; `.gitignore` now covers `.env` variants.
 4. **Is the score close to 8–9/10?** **Yes — 8.1/10.** Top 3 to close the distance: cut the first release (CHANGELOG + `v0.1.0` tag + GitHub Release), wire M4 for this repo to wake the dormant spec/ticket skills, fix the four logged template defects.
 
 ## 3. Overall score
@@ -34,7 +41,7 @@ Cross-domain harmonization: the invalid-SHA CI failure is counted once, in domai
 ## 5. Strengths
 
 - The standard is **self-applied**: this repo runs its own M1 (adapted CI + gitleaks), M2 (live hooks), and M3 (five rendered skills) — every commit today passed through them.
-- **Real-world validation**: M1+M2 templates already installed on a real consumer repo with a green PR (the support-agent repo PR #42), catching one genuine pre-existing lint bug in the process.
+- **Real-world validation**: M1+M2 templates already installed on a real consumer repo with a green PR, catching one genuine pre-existing lint bug in the process.
 - **Secrets doctrine is enforced, not aspirational**: gitleaks in CI + hooks + the single-internal-file isolation rule, all verified by greps this audit re-ran.
 
 ## 6. Gaps and risks
@@ -47,7 +54,7 @@ Cross-domain harmonization: the invalid-SHA CI failure is counted once, in domai
 
 ## 7. Compliance posture — secrets doctrine
 
-Docs and templates carry secret **names, locations, and acquisition steps — never values**. Verified this audit: pattern greps clean, tracked env files are name-only templates, real Big Emotion coordinates confined to `skills/setup/references/m7-bigemotion-internal.md` (deletable in one gesture if the repo goes public). Enforcement: gitleaks job in `ci.yml` + local gitleaks availability + `.gitignore` `.env` rules.
+Docs and templates carry secret **names, locations, and acquisition steps — never values**. Verified this audit: pattern greps clean, tracked env files are name-only templates, real coordinates confined to a single internal reference file (since deleted — see the supersession note above). Enforcement: gitleaks job in `ci.yml` + local gitleaks availability + `.gitignore` `.env` rules.
 
 ## 8. Security posture
 

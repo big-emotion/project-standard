@@ -6,10 +6,11 @@ Status: **Draft for review** · Author: Claude (session 2026-07-19) · Owner: jn
 
 Every Big Emotion project ships with the same toolset and configuration — quality gates, local hooks, four project skills, Atlassian wiring, Ferry. Today that standard exists only as two live implementations. This spec codifies it and defines **one Claude Code skill** that guides installing/configuring it on any repo, new or existing.
 
-Reference implementations:
+Reference implementations — two live private repos, referred to throughout by role
+(this repo is public and names neither):
 
-- `the website repo` — reference for **CI, Husky, and the skill family** (but legacy Ferry: 5 per-role workflows @v0.17.0, per-column Jira rules).
-- `the support-agent repo` — reference for **router-model Ferry** (v1.1.x) and for skills already de-coupled from website concerns.
+- **The website repo** — a client-facing Next.js site on Azure. Reference for **CI, Husky, and the skill family** (but legacy Ferry: 5 per-role workflows @v0.17.0, per-column Jira rules).
+- **The support-agent repo** — an AI support agent with a split npm/pnpm toolchain on the VPS. Reference for **router-model Ferry** (v1.1.x) and for skills already de-coupled from website concerns.
 
 The standard takes the best of both: website repo's quality gates + skill ergonomics, support-agent repo's Ferry wiring.
 
@@ -42,7 +43,7 @@ No stylelint, no `npm audit` job — dependency pinning via package-manager `ove
 - `commitlint.config.mjs`: `@commitlint/config-conventional` + type-enum `build, chore, ci, docs, feat, fix, perf, refactor, release, revert, style, test`.
 - `lint-staged.config.mjs` generic rows: `*.{ts,tsx}` → eslint --fix + prettier; `*.{css,md,json,mjs}` → prettier. Project-specific rows added per project.
 - `.editorconfig` (utf-8, lf, 2-space, final newline).
-- **Constraint:** must support split-toolchain repos (e.g. support-agent: npm root + pnpm `portal/`) — hooks templated per package manager and directory layout.
+- **Constraint:** must support split-toolchain repos (e.g. the support-agent repo: npm root + pnpm app subdirectory) — hooks templated per package manager and directory layout.
 - **Constraint:** Ferry agents commit on these repos — their commit messages must pass commitlint (conventional format is already in the agent prompts; the skill verifies this).
 
 ### M3 — Project skills (`.claude/skills/<slug>-*`)
@@ -95,7 +96,7 @@ The standard's deploy targets and the doctrine for handling credentials:
 - **Azure App Service (documented variant, no templates)**: the website model — staging + production apps, slots, OIDC federated credentials (no publish-profile secrets), standalone bundle assembly. Reference points to the website repo's runbooks.
 - **Transactional mail**: Microsoft 365 tenant SMTP (`smtp.office365.com:587` STARTTLS; Authenticated SMTP + app password prereq; Graph `sendMail` fallback) — no third-party ESP. OVH manages DNS zones/domains; MX/SPF stay pointed at M365.
 - **Secrets doctrine**: three storage tiers (GitHub secrets/environments · VPS `.env` filled in place by a human · provider portals). Docs and templates carry secret **names, locations, and acquisition steps — never values**. Credentials are personal per operator; nothing is shared through a repo. gitleaks (M1) is the enforcement layer, including on this plugin repo itself.
-- **Hybrid coordinates model**: every M7 template/reference is fully parameterized; the real Big Emotion coordinates (VPS, DNS, Azure app names — zero secret values) live in exactly one clearly-marked internal file, `references/m7-bigemotion-internal.md`, deletable in one gesture if the repo ever goes public.
+- **No-coordinates model**: every M7 template and reference is fully parameterized, and this repo holds no infrastructure coordinates at all — no hostnames, IPs, SSH ports, account handles, resource names or client identities. Operators supply their own at interview time from a private source outside this repo.
 
 ## 3. The setup skill
 
@@ -116,8 +117,9 @@ Taken (flag if you disagree):
 For the user:
 - **D5** Repo name: proposal `big-emotion/project-standard`. → Decided: `big-emotion/project-standard`.
 - **D6** Distribution: Claude Code **plugin marketplace** repo (team installs via `/plugin marketplace add big-emotion/project-standard`) vs plain repo the skill is copied from. Proposal: plugin. → Decided: plugin.
-- **D7** (2026-07-19) M7 coordinates model: **hybrid** — parameterized module + one internal coordinates file, zero secret values anywhere in the repo.
+- **D7** (2026-07-19, **superseded by D9**) M7 coordinates model: **hybrid** — parameterized module + one internal coordinates file, zero secret values anywhere in the repo.
 - **D8** (2026-07-19) Azure is a **documented variant**, not a templated target; the OVH VPS pattern is the templated default. Mail scope: M365 SMTP + OVH DNS/domains.
+- **D9** (2026-07-21) The repo is **public**, superseding D7's hybrid model. No infrastructure coordinates live here in any form: the internal coordinates file is deleted, and the two reference implementations are named by role ("the website repo", "the support-agent repo") rather than by org/repo slug. Operators keep coordinates in a private location outside this repo and supply them at interview time. Rationale: D7's single-file isolation kept the blast radius small but still published real coordinates to anyone who cloned the repo, and a public repo makes the file's own signpost ("delete this if public") a pointer rather than a safeguard.
 
 ## 5. Out of scope
 
@@ -129,7 +131,7 @@ For the user:
 ## 6. Acceptance criteria
 
 1. **Given** a fresh empty repo, **when** the skill runs with all modules selected, **then** it produces a repo passing its own CI with working hooks, five renamed skills, spec config, Ferry validated by `ferry-doctor` (Atlassian steps completed by guided human), and a checklist of manual steps done/remaining.
-2. **Given** `the support-agent repo`, **when** the skill runs gap analysis, **then** it reports: M1 partial (ci.yml lacks lint/format/typecheck/gitleaks), M2 missing, M3/M4/M5/M6 present — and installing M1+M2 yields green CI + working hooks without touching the present modules.
+2. **Given** the support-agent repo, **when** the skill runs gap analysis, **then** it reports: M1 partial (ci.yml lacks lint/format/typecheck/gitleaks), M2 missing, M3/M4/M5/M6 present — and installing M1+M2 yields green CI + working hooks without touching the present modules.
 3. **Given** a repo with the standard installed, **when** the skill re-runs, **then** it is idempotent (reports "compliant", changes nothing without explicit ask).
 
 ## 7. Risks & mitigations

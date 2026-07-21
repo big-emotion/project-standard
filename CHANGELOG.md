@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Claude Code plugin packaging: the repo is its own marketplace (`big-emotion`), installable via `/plugin marketplace add big-emotion/project-standard`.
 - Dogfood of the standard on this repo itself: adapted M1 CI (tests, template checker, manifest validation, gitleaks), M2 hooks, and the five self-rendered project skills (`project-standard-{release,audit,spec,ticket,bootstrap-confluence}`).
 - First production-readiness audit (`docs/PRODUCTION-READINESS-AUDIT.md`): 8.1/10.
-- Real-world validation of M1+M2 on `the support-agent repo` (ACME-000, PR #42).
+- Real-world validation of M1+M2 on a live consumer repo: green PR, hooks active, one pre-existing lint bug caught.
 
 [Unreleased]: https://github.com/big-emotion/project-standard/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/big-emotion/project-standard/releases/tag/v0.1.0

@@ -14,9 +14,9 @@ The toolset and configuration every Big Emotion project ships with — codified 
 | M6 | **Branch & release model** — `develop` integration, protected `main`, release by tag `v*` → deploy |
 | M7 | **Infrastructure & secrets** — OVH VPS (Docker + shared Traefik) as templated deploy target, Azure App Service as documented variant, M365 transactional SMTP + OVH DNS, secrets doctrine (names and locations, never values) |
 
-Full rationale and decisions: [SPEC.md](SPEC.md). Reference implementations: `the website repo` (M1–M3), `the support-agent repo` (M5, M7).
+Full rationale and decisions: [SPEC.md](SPEC.md). The standard is distilled from two live production repos — a Next.js client website (source of M1–M3) and an AI support agent (source of M5, M7).
 
-**No secret values, ever.** This repo documents where secrets live and what they are called; values stay in GitHub secrets, VPS `.env` files, and provider portals, tied to each operator's own accounts. Real Big Emotion infra coordinates (no secrets) are isolated in `skills/setup/references/m7-bigemotion-internal.md` — delete that one file if this repo ever becomes public.
+**No secret values, and no coordinates either.** This repo documents where secrets live and what they are called; values stay in GitHub secrets, VPS `.env` files, and provider portals, tied to each operator's own accounts. Being public, it also carries no infrastructure *coordinates* — no hostnames, IPs, account handles, resource names or client identities. Every deploy target is a `{{placeholder}}` the setup interview fills in from your own environment.
 
 ## Install
 

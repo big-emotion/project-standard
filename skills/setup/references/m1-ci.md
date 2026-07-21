@@ -1,6 +1,6 @@
 # M1 — CI quality gates: install reference
 
-Templates: `templates/m1-ci/`. Reference implementation: `the website repo` `.github/workflows/ci.yml` (the full version with every website-specific gate — useful when a project wants to graduate into the optional extensions below).
+Templates: `templates/m1-ci/`. Reference implementation: the website repo's `.github/workflows/ci.yml` (the full version with every website-specific gate — useful when a project wants to graduate into the optional extensions below).
 
 ## File map
 
