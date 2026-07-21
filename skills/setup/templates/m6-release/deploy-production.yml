@@ -68,11 +68,11 @@ jobs:
       # PROJECT-SPECIFIC: deploy steps
       # Everything from here to the end of this job is the project's own
       # deploy mechanism. Reference shapes from the two live implementations:
-      #   - Docker over SSH to a VPS (big-emotion/support-agent-chancellerie):
+      #   - Docker over SSH to a VPS (the support-agent repo):
       #     docker build → docker save | gzip → scp tarball + compose file →
       #     ssh docker load + `docker compose up -d --pull never` → curl smoke
       #     check expecting 200. Pin known_hosts; never StrictHostKeyChecking=no.
-      #   - Azure App Service (ANSUT-DSIS/sitewebgrandechancellerie):
+      #   - Azure App Service (the website repo):
       #     assemble standalone bundle → azure/login (OIDC) →
       #     azure/webapps-deploy → commit status with the deploy URL.
       # Keep a post-deploy smoke check (request the production URL, assert 200).

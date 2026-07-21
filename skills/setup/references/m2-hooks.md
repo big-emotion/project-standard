@@ -1,6 +1,6 @@
 # M2 — Husky local hooks: install reference
 
-Templates: `templates/m2-hooks/`. Reference implementation: `ANSUT-DSIS/sitewebgrandechancellerie` (`.husky/`, `commitlint.config.mjs`, `lint-staged.config.mjs`).
+Templates: `templates/m2-hooks/`. Reference implementation: the website repo (`.husky/`, `commitlint.config.mjs`, `lint-staged.config.mjs`).
 
 ## File map
 
@@ -56,7 +56,7 @@ Everything else (configs, prepare script) is identical.
 
 ## Split-toolchain repos (npm root + pnpm subdir)
 
-Some repos have two toolchains — e.g. `big-emotion/support-agent-chancellerie`: dependency-free npm root (agent config, scripts, evals) plus a pnpm Next.js app in `portal/`. Git hooks always execute **from the repo root**, so:
+Some repos have two toolchains — e.g. the support-agent repo: dependency-free npm root (agent config, scripts, evals) plus a pnpm Next.js app in `portal/`. Git hooks always execute **from the repo root**, so:
 
 - Husky, lint-staged, commitlint, prettier and the `prepare` script live in the **root** `package.json`, managed by the **root** package manager. With an npm root, the hooks take the npm form (`npx lint-staged`, `npx commitlint --edit "$1"`).
 - The subdir keeps its own ESLint/Prettier installs and configs. lint-staged rows targeting subdir files must execute inside the subdir with `-C`, so the subdir's tool versions and configs apply — not the root's:

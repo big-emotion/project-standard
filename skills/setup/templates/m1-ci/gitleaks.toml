@@ -8,7 +8,7 @@ title = "{{project_slug}} gitleaks config"
 useDefault = true
 
 # Uncomment and adapt when the default ruleset flags known non-secret files.
-# Examples below come from the reference repo (sitewebgrandechancellerie).
+# Examples below come from the reference website repo.
 #
 # [allowlist]
 # description = "Global allowlist for known non-secret paths"

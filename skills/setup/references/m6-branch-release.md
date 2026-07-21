@@ -33,8 +33,8 @@ Nothing deploys from a branch — only from a `v*` tag.
    - **Build + validation** — install with a frozen lockfile, run the build
      (mirror the M1 gates) so a bad tag fails in CI, not in production.
    - **`# PROJECT-SPECIFIC: deploy steps`** — the project's own mechanism.
-     Live shapes: Docker-over-SSH to a VPS (support-agent-chancellerie) and
-     Azure App Service (sitewebgrandechancellerie). Always end with a smoke
+     Live shapes: Docker-over-SSH to a VPS (the support-agent repo) and
+     Azure App Service (the website repo). Always end with a smoke
      check against the production URL.
    - **GitHub Release** — `softprops/action-gh-release` with
      `generate_release_notes: true`, gated on a successful deploy (`needs:`)

@@ -6,10 +6,10 @@ Service is a documented variant with no templates (§ b). Transactional mail
 rides the Microsoft 365 tenant (§ c). The secrets doctrine (§ d) governs all
 of it.
 
-This file is fully parameterized. The real Big Emotion coordinates (VPS,
-domains, Azure app names) and the interview defaults they imply live in
-`references/m7-bigemotion-internal.md` — the single file to delete if this
-repo ever becomes public.
+This file is fully parameterized, and the plugin is public: no real coordinates
+(VPS host, domains, Azure app names) appear anywhere in it. Collect them from
+the operator at interview time — the placeholders below are never given
+defaults here.
 
 | Template | Installed as | Notes |
 | --- | --- | --- |
@@ -145,7 +145,7 @@ mail at Microsoft 365 and must not be touched when adding app records (§ c).
 
 ## b. Azure App Service variant (documented, no templates)
 
-One live implementation exists — `ANSUT-DSIS/sitewebgrandechancellerie`,
+One live implementation exists — the website repo,
 where the client mandates its own Azure tenant. It is a **variant, not the
 default**: choose it only when the client's tenant/compliance/isolation
 requirements rule out the shared VPS. M7 deliberately ships no Azure
@@ -176,7 +176,7 @@ The model, in brief:
   `azure/webapps-deploy` with `clean: true` and startup command
   `node server.js`.
 
-Pointers (in `ANSUT-DSIS/sitewebgrandechancellerie`):
+Pointers (in the website repo):
 `docs/runbooks/azure-production-setup.md` (production App Service, OIDC
 credential + RBAC, app settings, gated go-live flip, rotation),
 `docs/runbooks/azure-staging-slot-setup.md` (staging slot + `dev` sandbox,
@@ -224,8 +224,8 @@ that keep SMTP AUTH blocked:
   rows in the `.env`.
 
 The live worked example is the support-agent portal
-(`big-emotion/support-agent-chancellerie`, `portal/src/lib/graph-mail.ts`):
-its tenant keeps Security Defaults on, so production runs the Graph fallback.
+(`portal/src/lib/graph-mail.ts`): its tenant keeps Security Defaults on, so
+production runs the Graph fallback.
 
 **DNS scope**: OVH manages the zone; Microsoft 365 manages the mailboxes. The
 zone's MX points at `*.mail.protection.outlook.com` and SPF includes the
@@ -271,8 +271,9 @@ Principles:
   `.gitleaks.toml`) runs on every PR of every repo, so a value that does leak
   into a commit fails CI before it lands. Local real values exist only in
   gitignored `.env` files.
-- **This plugin repo contains no secret values.** Templates and references
-  carry names, storage locations, and acquisition steps only. The single
-  file with real infrastructure *coordinates* (still zero secrets) is
-  `references/m7-bigemotion-internal.md` — delete it if the repo goes
-  public.
+- **This plugin repo is public: no secret values, and no coordinates either.**
+  Templates and references carry names, storage locations, and acquisition
+  steps only. Hostnames, IPs, SSH ports, account handles and resource names
+  are `{{placeholders}}` filled in at interview time and never written back
+  into the plugin — a coordinate committed here is a leak even when it is
+  not a secret.

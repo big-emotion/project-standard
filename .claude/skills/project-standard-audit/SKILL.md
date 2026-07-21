@@ -60,7 +60,7 @@ Read `docs/PRODUCTION-READINESS-AUDIT.md` if it exists. This skill **updates** t
 4. Score per domain (table, one row per rubric domain)
 5. Strengths
 6. Gaps and risks (per domain, with `file:line` evidence)
-7. Compliance posture — dedicated section. For this repo the compliance surface is the **secrets doctrine**: docs and templates carry secret names, locations, and acquisition steps — never values; real Big Emotion infra coordinates live only in `skills/setup/references/m7-bigemotion-internal.md`, deletable in one gesture if the repo goes public.
+7. Compliance posture — dedicated section. For this repo the compliance surface is the **secrets doctrine**: docs and templates carry secret names, locations, and acquisition steps — never values. This repo is public, so the doctrine extends to infrastructure *coordinates* (hostnames, IPs, SSH ports, account handles, resource names, client and consumer-repo identities): none may appear anywhere in the tree.
 8. Security posture — dedicated section
 9. Prioritized action list (15 max, each tied to a Jira ticket where one exists)
 10. Conclusion
@@ -81,7 +81,7 @@ Always (cheap, read-only):
 - `grep -rnE '\{\{' .claude/skills/project-standard-*/` — must return nothing: the rendered project skills are placeholder-free by contract.
 - `grep -rln 'PROJECT-''SPECIFIC' skills/setup/templates/` — must be **non-empty** (the pattern is split in two shell strings so this rendered skill itself stays clean of the marker string): the adaptation markers are product content inside the templates; their absence means someone resolved them in place, which is template corruption.
 - Reference completeness: for each `skills/setup/templates/m<N>-*` directory, a matching `skills/setup/references/m<N>-*.md` exists.
-- M7 isolation: read `skills/setup/references/m7-bigemotion-internal.md`, pick its distinctive coordinates (hostnames, IPs, app names), and `git grep` each one excluding that file — every hit outside it violates the single-internal-file rule. Do not hardcode the coordinates in this skill; derive them from the file at audit time.
+- Coordinates sweep (public-repo rule): the tree must contain **no** infrastructure coordinates at all. Run shape-based greps — `git grep -nE '\b([0-9]{1,3}\.){3}[0-9]{1,3}\b'` (public IPs), `git grep -niE 'vps-[a-z0-9]+\.|\.ovh\.net|azurewebsites|\.atlassian\.net'` (provider hostnames), and `git grep -nE '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}'` (real mailboxes). Every hit must be a documented placeholder, an `example.com`-class illustration, or a generic bind address — a real coordinate is a finding even though it is not a secret. Do not list real coordinates in this skill to grep for; that would reintroduce the leak it checks for.
 - `git grep -nE "TODO|FIXME|XXX|HACK" -- ':!node_modules' | wc -l` — code-debt heuristic.
 
 ### Step 4 — Score the domains
@@ -94,7 +94,7 @@ Use this rubric (1–10 each, equal weight), adapted to a plugin/templates repo.
 | 2 | CI gates + hooks | `ci.yml` runs both jobs — `gitleaks` (Docker image pinned by digest, `.gitleaks.toml` config) and `checks` (`npm test`, `npm run check:templates`, manifest JSON parse); concurrency group with cancel-in-progress; actions SHA-pinned; Husky live on this repo itself: `prepare: husky` script, `.husky/pre-commit` → lint-staged, `.husky/commit-msg` → commitlint, with `commitlint.config.mjs` + `lint-staged.config.mjs` at the root. |
 | 3 | Plugin packaging | `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` parse; plugin name `project-standard` consistent across both; versions in sync across `package.json` / `plugin.json` / `marketplace.json` `plugins[0]`; skills discoverable under `skills/` (`skills/setup/SKILL.md` frontmatter valid); README install commands match the marketplace and plugin names. |
 | 4 | Docs accuracy | SPEC.md and README module tables (M1–M7) match the actual tree under `skills/setup/templates/`; every module has its reference file under `skills/setup/references/`; every command a doc names exists in `package.json` scripts; English-docs rule respected. |
-| 5 | Secrets hygiene | `.gitleaks.toml` present (default rules + per-repo allowlist) and the gitleaks job wired in `ci.yml`; zero secret values anywhere (Step 3 pattern grep; full-history awareness); real infra coordinates appear only in `skills/setup/references/m7-bigemotion-internal.md` (Step 3 isolation grep returns nothing outside it); `.gitignore` covers `.env` variants. |
+| 5 | Secrets hygiene | `.gitleaks.toml` present (default rules + per-repo allowlist) and the gitleaks job wired in `ci.yml`; zero secret values anywhere (Step 3 pattern grep; full-history awareness); zero infrastructure coordinates anywhere (Step 3 coordinates sweep — this repo is public); `.gitignore` covers `.env` variants. |
 | 6 | Project-skills coverage | The rendered set `.claude/skills/project-standard-{release,audit,spec,ticket,bootstrap-confluence}/SKILL.md` is complete; each frontmatter `name:` equals its directory name; no unresolved placeholder and no unresolved adaptation marker in rendered skills (Step 3 greps); no shadowing collision in `~/.claude/skills` (a personal skill with the same name silently wins). |
 | 7 | Release readiness | `CHANGELOG.md` exists in Keep a Changelog format with an `[Unreleased]` section; three-file version sync (Step 3); annotated `v*` tags match released versions and each pushed tag has a GitHub Release (`gh release list` — this repo's releases are created by the release skill, no workflow); `/project-standard-release` preconditions are runnable (gh auth, `ci.yml` green on `main`). |
 
@@ -149,4 +149,4 @@ Full report: docs/PRODUCTION-READINESS-AUDIT.md
 - Fixing any gap found. The audit only **reports**; releases go through `/project-standard-release`.
 - Any write against external services (GitHub releases, Atlassian, deploy targets).
 - Live end-to-end measurement (installing the plugin on a scratch repo and running the setup skill) — domains score on configuration, checker output, and recorded evidence, not live installs.
-- Auditing the repos the standard is installed on (e.g. `sitewebgrandechancellerie`, `support-agent-chancellerie`) — each consumer repo has its own `<slug>-audit` skill; this audit scores only the plugin repo itself.
+- Auditing the repos the standard is installed on — each consumer repo has its own `<slug>-audit` skill; this audit scores only the plugin repo itself. Do not name consumer repos in the report: this repo is public.
